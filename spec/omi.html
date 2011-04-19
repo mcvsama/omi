@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+	<head>
+		<link rel='stylesheet' href='omi.css'/>
+	</head>
+	<body>
+		<h1><abbr title='Open Sound Control'>OSC</abbr> Musical Interface</h1>
+		<p class='work-in-progress'>
+			Work in progress
+		</p>
+		<p>Version 0.1.</p>
+		<p>
+			This document specifies musical instrument control protocol transported over Open Sound Control 1.0.
+		</p>
+		<p>Authors: <a href='http://mcv.mulabs.org/'>Michał Gawron</a></p>
+		<section>
+			<h1>Introduction</h1>
+			<p>
+				OMI is meant to be more flexible than <abbr title='Musical Instrument Digital Interface'>MIDI</abbr>.
+				It uses modern <a href='http://opensoundcontrol.org/'>Open Sound Control 1.0</a> as a transport layer,
+				and allows duplex communication between two OMI endpoints, provided that transport for OSC (typically
+				TCP/IP or UDP/IP) allows duplex connections.
+			</p>
+			<p>Key features:</p>
+			<ul>
+				<li>Accurate parameter control (32-bit float value vs. MIDI's 7-bit integer).</li>
+				<li>Enumerated parameters (switches, drop-down controllers).</li>
+				<li>Support for feature-rich controllers (with LCD screens, etc).</li>
+				<li>Support for touch-devices (Haken Continuum, Morphwiz, etc).</li>
+			</ul>
+			<p>
+				This specification describes a&nbsp;set of modules, that can be implemented independently of each other.
+			</p>
+		</section>
+		<section>
+			<h1>Data types</h1>
+			<ul>
+				<li>string</li>
+				<li>float</li>
+			</ul>
+		</section>
+		<section>
+			<h1>Controller-to-instrument protocol</h1>
+			<section>
+				<h1>Keyboard control</h1>
+				<ul>
+					<li>/note/on (optional explicit frequency)</li>
+					<li>/note/off</li>
+					<li>/note/panic</li>
+				</ul>
+			</section>
+			<section>
+				<h1>Parameter control</h1>
+				<ul>
+					<li>/parameter/set-mono (MIDI control-change, MIDI channel-pressure)</li>
+					<li>/parameter/set-poly (MIDI key-pressure)</li>
+				</ul>
+			</section>
+			<section>
+				<h1>Machine control</h1>
+				<ul>
+					<li>/transport/play</li>
+					<li>/transport/pause</li>
+					<li>/transport/fast-forward</li>
+					<li>/transport/rewind</li>
+					<li>/transport/stop</li>
+					<li>/transport/record</li>
+					<li>/transport/arm-record</li>
+					<li>/transport/loop</li>
+					<li>/transport/set-head-position</li>
+			</section>
+			<section>
+				<h1>Synchronization</h1>
+				<ul>
+					<li>/sync/set-bpm</li>
+					<li>/sync/clock</li>
+				</ul>
+			</section>
+			<section>
+				<h1>Preset change</h1>
+			</section>
+		</section>
+		<section>
+			<h1>Instrument-to-controller protocol</h1>
+			<section>
+				<h1>List of parameters</h1>
+				<ul>
+					<li>list-parameters</li>
+				</ul>
+				<p>Parameter consists of:</p>
+				<ul>
+					<li>id: string</li>
+					<li>title: string</li>
+					<li>description: string</li>
+					<li>minimum-value: float</li>
+					<li>maximum-value: float</li>
+					<li>enumerated-values: ...</li>
+					<li>default-value</li>
+					<li>hint: string (pitchbend, sustain, sostenuto, soft-pedal, expression, …)</li>
+				</ul>
+			</section>
+			<section>
+				<h1>MIDI comparison</h1>
+				<p>
+					Channel pressure = /controller/poly-set
+				</p>
+			</section>
+		</section>
+	</body>
+</html>
