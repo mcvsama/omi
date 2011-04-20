@@ -22,40 +22,84 @@
 				and allows duplex communication between two OMI endpoints, provided that transport for OSC (typically
 				TCP/IP or UDP/IP) allows duplex connections.
 			</p>
-			<p>Key features:</p>
+			<p class='todo'>Key features:</p>
 			<ul>
 				<li>Accurate parameter control (32-bit float value vs. MIDI's 7-bit integer).</li>
 				<li>Enumerated parameters (switches, drop-down controllers).</li>
 				<li>Support for feature-rich controllers (with LCD screens, etc).</li>
-				<li>Support for touch-devices (Haken Continuum, Morphwiz, etc).</li>
+				<li>Support for multitouch-devices (Haken Continuum, Morphwiz, etc).</li>
 			</ul>
 			<p>
 				This specification describes a set of modules, that can be implemented independently of each other.
 			</p>
+			<p class='todo'>Problems to be addressed: tuning (440Hz or other?)</p>
 		</section>
 		<section>
 			<h1>Data types</h1>
-			<ul>
-				<li>string</li>
-				<li>float</li>
-			</ul>
+			<p>This specification assumes that you're familiar with OSC 1.0.</p>
+			<p>All data types used in this document correspond to basic OSC-defined data types. For convenience shorter names are used:</p>
+			<table>
+				<thead>
+					<tr>
+						<th scope='col'>OMI data type</th>
+						<th scope='col'>OSC data type</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td><code>int</code></td>
+						<td><code>int32</code></td>
+					</tr>
+					<tr>
+						<td><code>float</code></td>
+						<td><code>float32</code></td>
+					</tr>
+					<tr>
+						<td><code>string</code></td>
+						<td><code>OSC-string</code></td>
+					</tr>
+					<tr>
+						<td><code>blob</code></td>
+						<td><code>OSC-blob</code></td>
+					</tr>
+				</tbody>
+			</table>
 		</section>
 		<section>
 			<h1>Controller-to-instrument protocol</h1>
 			<section>
 				<h1>Keyboard control</h1>
+				<p>Problems to be addressed: support for multitouch devices; different tunings; poly-parameters</p>
+				<p class='todo'>Rationale: …</p>
+				<section>
+					<h1><span class='osc-message'>/note/on (voice-id, frequency)</span></h1>
+					<dl class='parameters'>
+						<dt><code>voice-id: int</code></dt>
+						<dd>
+							Unique voice identifier, allocated by the controller.
+							If the voice with given <code>voice-id</code> isn't yet sounding in the instrument, it's created.
+							Otherwise its <code>frequency</code> attribute is updated.
+						</dd>
+						<dt><code>frequency: float</code></dt>
+						<dd>Voice frequency expressed in Hertz.</dd>
+					</dl>
+				</section>
+				<section>
+					<h1><span class='osc-message'>/note/key-on (voice-id, key-number)</span></h1>
+				</section>
 				<ul>
-					<li>/note/on (optional explicit frequency)</li>
-					<li>/note/off</li>
 					<li>/note/panic</li>
 				</ul>
+				<p class='todo'></p>
 			</section>
 			<section>
 				<h1>Parameter control</h1>
 				<ul>
 					<li>/parameter/set-mono (MIDI control-change, MIDI channel-pressure)</li>
 					<li>/parameter/set-poly (MIDI key-pressure)</li>
+					<li>/parameter/updated-list</li>
 				</ul>
+				<p class='todo'></p>
 			</section>
 			<section>
 				<h1>Machine control</h1>
@@ -70,6 +114,7 @@
 					<li>/transport/loop</li>
 					<li>/transport/set-head-position</li>
 				</ul>
+				<p class='todo'></p>
 			</section>
 			<section>
 				<h1>Synchronization</h1>
@@ -77,9 +122,14 @@
 					<li>/sync/set-bpm</li>
 					<li>/sync/clock</li>
 				</ul>
+				<p class='todo'></p>
 			</section>
 			<section>
 				<h1>Preset change</h1>
+				<ul>
+					<li>/preset/updated-list</li>
+				</ul>
+				<p class='todo'></p>
 			</section>
 		</section>
 		<section>
@@ -100,13 +150,24 @@
 					<li>default-value</li>
 					<li>hint: string (pitchbend, sustain, sostenuto, soft-pedal, expression, …)</li>
 				</ul>
+				<p class='todo'></p>
+			</section>
+			<section>
+				<h1>Controlling device's UI (LCD screens, etc)</h1>
+				<p class='todo'></p>
 			</section>
 			<section>
 				<h1>MIDI comparison</h1>
 				<p>
 					Channel pressure = /controller/poly-set
 				</p>
+				<p class='todo'></p>
 			</section>
+		</section>
+		<section>
+			<h1>Devices discovery</h1>
+			<p>Problems to address: auto device discoverability (should be different specification probably); parameters list change; patches list change</p>
+			<p class='todo'></p>
 		</section>
 	</body>
 </html>
