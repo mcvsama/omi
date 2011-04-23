@@ -22,120 +22,219 @@
 				and allows duplex communication between two OMI endpoints, provided that transport for OSC (typically
 				TCP/IP or UDP/IP) allows duplex connections.
 			</p>
-			<p class='todo'>Key features:</p>
+			<p>OMI features missing in MIDI:</p>
 			<ul>
-				<li>Accurate parameter control (32-bit float value vs. MIDI's 7-bit integer).</li>
-				<li>Enumerated parameters (switches, drop-down controllers).</li>
-				<li>Support for feature-rich controllers (with LCD screens, etc).</li>
-				<li>Support for multitouch-devices (Haken Continuum, Morphwiz, etc).</li>
+				<li>Support for multitouch devices</li>
+				<li>Arbitrary polyphonic parameters</li>
+				<li>Accurate parameter control (32-bit float value vs. MIDI's 7-bit integer)</li>
+				<li>Enumerated parameters (for switches or drop-down controllers)</li>
+				<li>Controller feedback (lists of controllable parameters)</li>
 			</ul>
 			<p>
 				This specification describes a set of modules, that can be implemented independently of each other.
 			</p>
 			<p class='todo'>Problems to be addressed: tuning (440Hz or other?)</p>
-		</section>
-		<section>
-			<h1>Data types</h1>
 			<p>This specification assumes that you're familiar with OSC 1.0.</p>
-			<p>All data types used in this document correspond to basic OSC-defined data types. For convenience shorter names are used:</p>
-			<table>
-				<thead>
-					<tr>
-						<th scope='col'>OMI data type</th>
-						<th scope='col'>OSC data type</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<td><code>int</code></td>
-						<td><code>int32</code></td>
-					</tr>
-					<tr>
-						<td><code>float</code></td>
-						<td><code>float32</code></td>
-					</tr>
-					<tr>
-						<td><code>string</code></td>
-						<td><code>OSC-string</code></td>
-					</tr>
-					<tr>
-						<td><code>blob</code></td>
-						<td><code>OSC-blob</code></td>
-					</tr>
-				</tbody>
-			</table>
 		</section>
 		<section>
-			<h1>Controller-to-instrument protocol</h1>
+			<h1>Notation</h1>
 			<section>
-				<h1>Keyboard control</h1>
-				<p>Problems to be addressed: support for multitouch devices; different tunings; poly-parameters</p>
-				<p class='todo'>Rationale: …</p>
-				<section>
-					<h1><span class='osc-message'>/note/on (voice-id, frequency)</span></h1>
-					<dl class='parameters'>
-						<dt><code>voice-id: int</code></dt>
-						<dd>
-							Unique voice identifier, allocated by the controller.
-							If the voice with given <code>voice-id</code> isn't yet sounding in the instrument, it's created.
+				<h1>Terms</h1>
+				<dl>
+					<dt><dfn>OMI server</dfn></dt>
+					<dd>
+						A hardware or software instrument, synthesizer, <abbr title='Digital Audio Workstation'>DAW</abbr>, sequencer
+						or similar type device or computer program that reacts to OMI messages in a ways described in this document.
+					</dd>
+					<dt><dfn>OMI controller</dfn></dt>
+					<dd>
+						A hardware controller, <abbr>DAW</abbr>, sequencer or similar type device or
+						computer program that generates OMI messages to control the OMI server.
+					</dd>
+					<dt><dfn>OMI message</dfn></dt>
+					<dd>An <dfn>OSC message</dfn> sent to OMI server or OMI conroller, that has meaning described in this document.</dd>
+				</dl>
+			</section>
+			<section>
+				<h1>Data types</h1>
+				<p>
+					All data types used in this document correspond to four basic OSC-defined data types:
+					<code>int32</code>, <code>float32</code>, <code>OSC-string</code> and <code>OSC-blob</code>.
+				</p>
+			</section>
+			<section>
+				<h1>OMI endpoints</h1>
+				<p class='todo'>Duplex or simplex</p>
+				<p class='todo'>Mountpoints</p>
+				<pre>
+          [Controller]--------------[Instrument]
+            --&gt; params-list-request
+            --&gt; /voice/*
+            --&gt; /parameter/*
+            &lt;-- params-list
+
+          [Controller]------[DAW]-----[Instrument]
+                                --&gt; params-list-request
+                                --&gt; /voice/*
+                                --&gt; /parameter/*
+                                &lt;-- params-list
+                  --&gt; params-list-request
+                  --&gt; /voice/*
+                  --&gt; /parameter/*
+                  &lt;-- params-list
+				</pre>
+			</section>
+		</section>
+		<section>
+			<h1>Voice control</h1>
+			<section>
+				<h1 class='omi-message to-server'>/voice/on (voice-id, frequency)</h1>
+				<p>Create new or update existing voice with the given frequency.</p>
+				<dl class='parameters'>
+					<dt><code>voice-id: int32</code></dt>
+					<dd>
+						<p>
+							Unique voice identifier, allocated arbitrarily by the controller.
+							If the voice with given <code>voice-id</code> doesn't exist yet, it's created.
 							Otherwise its <code>frequency</code> attribute is updated.
+						</p>
+						<p>
+							This identifier is used by various other <dfn>OMI messages</dfn> that control parameters of a particular voice.
+							Keyboard controllers will use key number as a <code>voice-id</code>, so it's possible to trigger
+							percussion sounds. Percussion instruments will ignore <code>frequency</code> parameter.
+						</p>
+					</dd>
+					<dt><code>frequency: float32</code></dt>
+					<dd>
+						<p>Voice frequency expressed in Hertz.</p>
+						<p>For MIDI-like note triggering with note-number, use the following formula to convert MIDI note number to frequency:</p>
+						<p class='formula'><i>f</i> = 2<sup>(<i>k</i>﹣69) / 12</sup></p>
+						<p>where <i>f</i> is voice frequency and <i>k</i> is MIDI note number.</p>
+					</dd>
+				</dl>
+				<p>
+					This message can come in an OSC bundle with other messages that will immediately affect the newly created voice,
+					for example <code>/parameter/set-poly</code>. OMI server should immediately apply the parameter to the new voice.
+					Example use case: set voice's <q>attack velocity</q> or <q>release velocity</q>.
+				</p>
+			</section>
+			<section>
+				<h1 class='omi-message to-server'>/voice/off (voice-id)</h1>
+				<p>Release specified voice.</p>
+				<dl class='parameters'>
+					<dt><code>voice-id: int32</code></dt>
+					<dd>
+						Specifies voice to shut down.
+					</dd>
+				</dl>
+				<p>
+					This message does not mean to cause immediate cease of the sound. It's up to the OSC server (an instrument) how the voice
+					should stop sounding. This means that the voice can still sound after the <code>/voice/off</code> message,
+					and an OMI controller might want to reuse the <code>voice-id</code>. It's then up to the OMI server whether
+					incoming parameter control messages will affect the old voice or not.
+				</p>
+			</section>
+			<section>
+				<h1 class='omi-message to-server'>/voice/panic</h1>
+				<p>Shut down all voices immediately.</p>
+			</section>
+		</section>
+		<section>
+			<h1>Parameter control</h1>
+			<p>
+				Parameters are meant to control sound engine inside the OMI server, but can be generally used for anything.
+				Parameters are identified by <code>parameter-id</code>, which is an arbitrary OSC-string.
+				OSC server can provide detailed list of parameters to the controller. It might be be useful for <abbr>DAW</abbr> or sequencer,
+				where user will select parameter to control by its name, description, etc.
+				Simpler OMI controllers can use predefined parameter identifiers. The OMI server
+				should provide a possibility to assign one of the predefined identifiers to any of the controllers.
+			</p>
+			<section>
+				<h1 class='omi-message to-server'>/parameter/set-mono (parameter-id, value)</h1>
+				<p>Set monophonic parameter to the given value.</p>
+				<dl class='parameters'>
+					<dt><code>parameter-id: OSC-string</code></dt>
+					<dd>Parameter identifier, tells which parameter to update.</dd>
+					<dt><code>value: float32</code></dt>
+					<dd>Parameter value. Value must be in range [0, 1.0].</dd>
+				</dl>
+				<p>Monophonic parameter affects timbre of all created voices.</p>
+				<p>MIDI equivalent of this message is <dfn>control change</dfn> event.</p>
+			</section>
+			<section>
+				<h1 class='omi-message to-server'>/parameter/set-poly (parameter-id, voice-id, value)</h1>
+				<p>Set polyphonic parameter to the given value.</p>
+				<dl class='parameters'>
+						<dt><code>parameter-id: OSC-string</code></dt>
+						<dd>Parameter identifier, tells which parameter to update.</dd>
+						<dt><code>voice-id: int32</code></dt>
+						<dd>
+							Voice identifier. As polyphonic parameters are bound to voices, this parameter tells for
+							which voice the parameter should be updated.
 						</dd>
-						<dt><code>frequency: float</code></dt>
-						<dd>Voice frequency expressed in Hertz.</dd>
-					</dl>
-				</section>
-				<section>
-					<h1><span class='osc-message'>/note/key-on (voice-id, key-number)</span></h1>
-				</section>
-				<ul>
-					<li>/note/panic</li>
-				</ul>
-				<p class='todo'></p>
+						<dt><code>value: float32</code></dt>
+						<dd>Parameter value. Value must be in range [0, 1.0].</dd>
+				</dl>
+				<p>
+					Polyphonic parameters are bound to existing voices, which means every voice has separate set
+					of polyphonic parameters that can be controlled.
+				</p>
+				<p>
+					There is no general MIDI equivalent of this event, but there is one specific:
+					<dfn>key pressure</dfn> event (also known as aftertouch or polyphonic aftertouch).
+				</p>
 			</section>
 			<section>
-				<h1>Parameter control</h1>
+				<h1 class='omi-message to-controller'>/parameter/list</h1>
+				<p>Tells the OMI controller that the OMI server has updated its parameters list.</p>
+				<p>Example use cases:</p>
 				<ul>
-					<li>/parameter/set-mono (MIDI control-change, MIDI channel-pressure)</li>
-					<li>/parameter/set-poly (MIDI key-pressure)</li>
-					<li>/parameter/updated-list</li>
+					<li>User adds an effect to the instrument</li>
+					<li>User adds an LFO or envelope generator</li>
+					<li>User adds new synthesis engine</li>
 				</ul>
-				<p class='todo'></p>
 			</section>
 			<section>
-				<h1>Machine control</h1>
-				<ul>
-					<li>/transport/play</li>
-					<li>/transport/pause</li>
-					<li>/transport/fast-forward</li>
-					<li>/transport/rewind</li>
-					<li>/transport/stop</li>
-					<li>/transport/record</li>
-					<li>/transport/arm-record</li>
-					<li>/transport/loop</li>
-					<li>/transport/set-head-position</li>
-				</ul>
-				<p class='todo'></p>
+				<h1 class='omi-message to-server'>/parameter/get-list</h1>
 			</section>
+		</section>
+		<section>
+			<h1>Machine control</h1>
 			<section>
-				<h1>Synchronization</h1>
-				<ul>
-					<li>/sync/set-bpm</li>
-					<li>/sync/clock</li>
-				</ul>
-				<p class='todo'></p>
+				<h1>/transport/move-head (measures, move-type)</h1>
 			</section>
-			<section>
-				<h1>Preset change</h1>
-				<ul>
-					<li>/preset/updated-list</li>
-				</ul>
-				<p class='todo'></p>
-			</section>
+			<ul>
+				<li>/transport/play</li>
+				<li>/transport/pause</li>
+				<li>/transport/fast-forward</li>
+				<li>/transport/rewind</li>
+				<li>/transport/stop</li>
+				<li>/transport/record</li>
+				<li>/transport/arm-record</li>
+				<li>/transport/loop</li>
+				<li>/transport/set-head-position</li>
+			</ul>
+			<p class='todo'></p>
+		</section>
+		<section>
+			<h1>Synchronization</h1>
+			<ul>
+				<li>/sync/set-bpm</li>
+				<li>/sync/clock</li>
+			</ul>
+			<p class='todo'></p>
+		</section>
+		<section>
+			<h1>Preset change</h1>
+			<ul>
+				<li>/preset/updated-list</li>
+			</ul>
+			<p class='todo'></p>
 		</section>
 		<section>
 			<h1>Instrument-to-controller protocol</h1>
 			<section>
-				<h1>List of parameters</h1>
+				<h1>parameters</h1>
 				<ul>
 					<li>list-parameters</li>
 				</ul>
@@ -156,18 +255,48 @@
 				<h1>Controlling device's UI (LCD screens, etc)</h1>
 				<p class='todo'></p>
 			</section>
-			<section>
-				<h1>MIDI comparison</h1>
-				<p>
-					Channel pressure = /controller/poly-set
-				</p>
-				<p class='todo'></p>
-			</section>
+		</section>
+		<section>
+			<h1>Legacy mode</h1>
+			<p class='todo'>Predefined parameter names for simple devices: <code>omi:parameter-1</code>, <code>omi:pitchbend</code>, <code>omi:volume</code>, …</p>
 		</section>
 		<section>
 			<h1>Devices discovery</h1>
 			<p>Problems to address: auto device discoverability (should be different specification probably); parameters list change; patches list change</p>
 			<p class='todo'></p>
+		</section>
+		<section>
+			<h1>General OMI - General MIDI</h1>
+			<p class='todo'>For simplex communication.</p>
+			<h1>MIDI use cases</h1>
+			<p class='todo'>MIDI compatibility - use cases involving OMI-aware DAW and MIDI-only controller</p>
+			<table>
+				<thead>
+					<tr>
+						<th scope='col'>MIDI event</th>
+						<th scope='col'>OMI message</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>Control change<br/>Channel pressure</td>
+						<td><code>/parameter/set-mono</code></td>
+					</tr>
+					<tr>
+						<td>Key pressure (aftertouch)</td>
+						<td><code>/parameter/set-poly</code></td>
+					</tr>
+				</tbody>
+			</table>
+			<p>
+				Channel pressure = /controller/poly-set
+			</p>
+			<dl>
+				<dt>MIDI NoteOn event</dt>
+				<dd>/voice/on (midi_note_number, 2^((midi_note_number - 69) / 12))</dd>
+			</dl>
+			<p class='todo'></p>
+			<h1>OMI use cases</h1>
 		</section>
 	</body>
 </html>

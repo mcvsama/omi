@@ -1,3 +1,5 @@
+article, aside, figure, footer, header, hgroup, menu, nav, section { display:block; }
+
 body {
 	margin: 0 auto 2.5em;
 	padding: 0;
@@ -8,6 +10,7 @@ body {
 }
 
 .work-in-progress {
+	display: block;
 	position: fixed;
 	top: 0;
 	left: 0;
@@ -28,27 +31,34 @@ section section {
 body > h1 {
 	font-size: 3em;
 	border-bottom: none;
+	margin-top: 2em;
+}
+
+body > section:first-of-type {
+	margin-top: 5em;
 }
 
 h1 {
 	font-weight: bold;
 	color: #369;
+	padding-bottom: 0.1em;
 	border-bottom: solid 1px #369;
 }
 
 body > section > h1 {
 	font-size: 1.8em;
+	margin-top: 1.5em;
+}
+
+body > section > section {
+	padding-left: 2em;
 }
 
 body > section > section > h1 {
-	font-size: 1.4em;
+	font-size: 1.2em;
 	border-bottom: none;
-}
-
-body > section > section > section h1 {
-	font-size: 1em;
-	border-bottom: none;
-	text-decoration: underline;
+	margin: 1em 0;
+	margin-left: -1.66em;
 }
 
 table {
@@ -94,8 +104,23 @@ tr:nth-child(even) {
 	border-radius: 3px;
 }
 
+dt {
+	margin: 1em 0;
+}
+
+dd {
+	margin-bottom: 0.5em;
+}
+
+dd p:first-child {
+	margin-top: 0;
+}
+
+dd p:last-child {
+	margin-bottom: 0;
+}
+
 dl.parameters dt {
-	margin: 0.5em 0;
 	background: #eee;
 	background: -moz-linear-gradient(90deg, #ddd, #f0f0f0);
 	border-radius: 2px;
@@ -103,3 +128,30 @@ dl.parameters dt {
 	display: inline-block;
 }
 
+.formula {
+	padding-left: 2em;
+	font-size: 2em;
+	font-family: 'Nimbus Roman No9 L', 'Times New Roman', serif;
+}
+
+.formula sup {
+	font-size: 60%;
+}
+
+.omi-message.to-server::after {
+	font-size: 10pt;
+	font-weight: normal;
+	color: #5c5;
+	margin-left: 1em;
+	margin-top: 0.5em;
+	content: 'OMI controller → OMI server';
+}
+
+.omi-message.to-controller::after {
+	font-size: 10pt;
+	font-weight: normal;
+	color: #c55;
+	margin-left: 1em;
+	margin-top: 0.5em;
+	content: 'OMI server → OMI controller';
+}
